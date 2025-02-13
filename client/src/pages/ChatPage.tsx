@@ -334,8 +334,11 @@ const ChatTest: React.FC = () => {
   }, [navigate]);
 
   // Establish socket connection on mount
+  
   useEffect(() => {
-    const newSocket: Socket = io('http://localhost:3001');
+
+    const url = import.meta.env.VITE_SOCKET_API;
+    const newSocket: Socket = io(`${url}`);
     setSocket(newSocket);
 
     newSocket.on('connect', () => {

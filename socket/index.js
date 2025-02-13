@@ -1,7 +1,12 @@
-const http = require('http');
-const { Server } = require('socket.io');
+// Import required modules
+import http from 'http';
+import { Server } from 'socket.io';
+import dotenv from 'dotenv';
 
-// Create HTTP server
+// Load environment variables
+dotenv.config();
+
+// Create HTTP Server
 const httpServer = http.createServer((req, res) => {
   res.writeHead(200);
   res.end('Socket server is running.');
@@ -30,8 +35,10 @@ io.on('connection', (socket) => {
   });
 });
 
-// Use a port from environment variables or default to 3001
+// Get PORT from .env file (with a default fallback)
 const port = process.env.PORT || 3001;
+
+// Start the server
 httpServer.listen(port, () => {
   console.log(`Socket server running on port ${port}`);
 });

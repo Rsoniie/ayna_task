@@ -162,8 +162,11 @@ const Login: React.FC = () => {
 
     try {
       // Replace with your actual endpoint
+
+      const url = import.meta.env.VITE_SERVER_API;
+      // console.log(url);
       const { data } = await axios.post<LoginResponse>(
-        'http://localhost:1337/api/auth/local/',
+        `${url}/api/auth/local/`,
         { identifier, password }
       );
 
