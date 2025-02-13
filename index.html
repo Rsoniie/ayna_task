@@ -1,0 +1,102 @@
+<!-- 
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WebSocket Test</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const socket = io('http://localhost:3001');
+
+            socket.on('connect', () => {
+                console.log('Connected to WebSocket server!');
+                displayMessage('Connected to WebSocket server!');
+            });
+
+            socket.on('server_message', function(message) {
+                console.log('Message from server:', message);
+                displayMessage('Server: ' + message);
+            });
+
+            function sendMessage(message) {
+                socket.emit('client_message', message);
+                displayMessage('You: ' + message);
+            }
+
+            document.getElementById('sendBtn').addEventListener('click', function() {
+                const message = document.getElementById('messageInput').value;
+                sendMessage(message);
+            });
+
+            function displayMessage(message) {
+                const p = document.createElement('p');
+                p.innerText = message;
+                document.getElementById('messages').appendChild(p);
+            }
+        });
+    </script>
+</head>
+<body>
+    <h1>WebSocket Chat Test</h1>
+    <div id="messages"></div>
+    <input type="text" id="messageInput" placeholder="Type a message...">
+    <button id="sendBtn">Send Message</button>
+</body>
+</html>
+ -->
+
+
+
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>WebSocket Chat Test</title>
+  <!-- Load Socket.IO client (version 4.x to match the server) -->
+  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Connect to the WebSocket server running on localhost port 3001.
+      const socket = io('http://localhost:3001');
+
+      // When connected, log and display a message.
+      socket.on('connect', () => {
+        console.log('Connected to WebSocket server!');
+        displayMessage('Connected to WebSocket server!');
+      });
+
+      // Listen for messages from the server.
+      socket.on('server_message', function(message) {
+        console.log('Message from server:', message);
+        displayMessage('Server: ' + message);
+      });
+
+      // When the "Send Message" button is clicked, send the message.
+      document.getElementById('sendBtn').addEventListener('click', function() {
+        const message = document.getElementById('messageInput').value;
+        // Emit the message to the server.
+        socket.emit('client_message', message);
+        displayMessage('You: ' + message);
+      });
+
+      // Helper function to display messages on the page.
+      function displayMessage(message) {
+        const p = document.createElement('p');
+        p.innerText = message;
+        document.getElementById('messages').appendChild(p);
+      }
+    });
+  </script>
+</head>
+<body>
+  <h1>WebSocket Chat Test</h1>
+  <div id="messages" style="border:1px solid #ccc; padding:10px; margin-bottom:10px; height:200px; overflow:auto;"></div>
+  <input type="text" id="messageInput" placeholder="Type a message..." />
+  <button id="sendBtn">Send Message</button>
+</body>
+</html>
