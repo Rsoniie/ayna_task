@@ -1,7 +1,7 @@
 
-
 // import React, { useState, useEffect, useRef } from 'react';
 // import { io, Socket } from 'socket.io-client';
+// import { useNavigate } from 'react-router-dom';
 
 // interface ChatMessage {
 //   id: number;
@@ -15,6 +15,7 @@
 //   const [inputMessage, setInputMessage] = useState<string>('');
 //   const messagesRef = useRef<HTMLDivElement>(null);
 //   const nextIdRef = useRef<number>(1);
+//   const navigate = useNavigate();
 
 //   const getNextId = () => nextIdRef.current++;
 
@@ -57,6 +58,15 @@
 //       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
 //     }
 //   }, [messages]);
+
+//   // Logout handler: remove token and navigate to login
+//   const handleLogout = () => {
+//     localStorage.removeItem('token');
+//     if (socket) {
+//       socket.disconnect();
+//     }
+//     navigate('/login');
+//   };
 
 //   // Styling objects
 //   const containerStyle: React.CSSProperties = {
@@ -108,7 +118,7 @@
 //     padding: '10px 20px',
 //     borderRadius: '20px',
 //     border: 'none',
-//     backgroundColor: '#128C7E', // WhatsApp send button color
+//     backgroundColor: '#128C7E',
 //     color: 'white',
 //     cursor: 'pointer',
 //   };
@@ -140,7 +150,17 @@
 
 //   return (
 //     <div style={containerStyle}>
-//       <div style={headerStyle}>Chat</div>
+//       <div style={headerStyle}>
+//         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+//           <span>Chat</span>
+//           <img
+//             src="https://cdn-icons-png.flaticon.com/512/1828/1828479.png"
+//             alt="Logout"
+//             style={{ width: '24px', height: '24px', cursor: 'pointer' }}
+//             onClick={handleLogout}
+//           />
+//         </div>
+//       </div>
 //       <div id="messages" style={messagesContainerStyle} ref={messagesRef}>
 //         {messages.map((msg) => (
 //           <div
@@ -192,14 +212,13 @@
 
 
 
-
-
-
+// src/components/ChatTest.tsx
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
+import { db, ChatMessage, ChatSession, AuthData } from '../db/db';
 
-interface ChatMessage {
+interface ChatMessageExtended {
   id: number;
   text: string;
   type: 'sent' | 'received' | 'system';
@@ -207,18 +226,56 @@ interface ChatMessage {
 
 const ChatTest: React.FC = () => {
   const [socket, setSocket] = useState<Socket | null>(null);
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<ChatMessageExtended[]>([]);
   const [inputMessage, setInputMessage] = useState<string>('');
   const messagesRef = useRef<HTMLDivElement>(null);
   const nextIdRef = useRef<number>(1);
+  const sessionIdRef = useRef<number | null>(null);
   const navigate = useNavigate();
 
   const getNextId = () => nextIdRef.current++;
 
   // Adds a new message to state
-  const addMessage = (message: ChatMessage) => {
+  const addMessage = (message: ChatMessageExtended) => {
     setMessages((prev) => [...prev, message]);
   };
+
+  // Load auth data and then load or create a chat session for this user
+  useEffect(() => {
+    const loadOrCreateSession = async () => {
+      const authRecords: AuthData[] = await db.authData.toArray();
+      if (authRecords.length === 0) {
+        // If no user is logged in, redirect to login.
+        navigate('/login');
+        return;
+      }
+      const currentUser = authRecords[0].user;
+
+      // Check for an existing session for this user
+      const existingSession: ChatSession | undefined = await db.chatSessions
+        .where('userId')
+        .equals(currentUser.id)
+        .first();
+
+      if (existingSession) {
+        sessionIdRef.current = existingSession.id!;
+        setMessages(existingSession.messages || []);
+        console.log('Loaded existing chat session for user:', currentUser.id);
+      } else {
+        // If none exists, create a new session for the user.
+        const sessionId = await db.chatSessions.add({
+          sessionName: 'Chat Session',
+          userId: currentUser.id,
+          messages: [],
+          timestamp: Date.now(),
+        });
+        sessionIdRef.current = sessionId;
+        console.log('Created new chat session for user:', currentUser.id);
+      }
+    };
+
+    loadOrCreateSession();
+  }, [navigate]);
 
   // Establish socket connection on component mount
   useEffect(() => {
@@ -227,7 +284,11 @@ const ChatTest: React.FC = () => {
 
     newSocket.on('connect', () => {
       console.log('Connected to WebSocket server!');
-      addMessage({ id: getNextId(), text: 'Connected to WebSocket server!', type: 'system' });
+      addMessage({
+        id: getNextId(),
+        text: 'Connected to WebSocket server!',
+        type: 'system',
+      });
     });
 
     newSocket.on('server_message', (message: string) => {
@@ -240,7 +301,24 @@ const ChatTest: React.FC = () => {
     };
   }, []);
 
-  // Handle sending messages
+  // Save chat history to local DB whenever messages change
+  useEffect(() => {
+    const updateSession = async () => {
+      if (sessionIdRef.current !== null) {
+        try {
+          await db.chatSessions.update(sessionIdRef.current, {
+            messages: messages,
+            timestamp: Date.now(),
+          });
+          console.log('Chat session updated with', messages.length, 'messages');
+        } catch (error) {
+          console.error('Failed to update chat session:', error);
+        }
+      }
+    };
+    updateSession();
+  }, [messages]);
+
   const sendMessage = () => {
     if (!socket || inputMessage.trim() === '') return;
     socket.emit('client_message', inputMessage);
@@ -248,14 +326,13 @@ const ChatTest: React.FC = () => {
     setInputMessage('');
   };
 
-  // Auto-scroll to the bottom when messages update
   useEffect(() => {
     if (messagesRef.current) {
       messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
     }
   }, [messages]);
 
-  // Logout handler: remove token and navigate to login
+
   const handleLogout = () => {
     localStorage.removeItem('token');
     if (socket) {
@@ -278,7 +355,7 @@ const ChatTest: React.FC = () => {
   };
 
   const headerStyle: React.CSSProperties = {
-    backgroundColor: '#075E54', // WhatsApp-like header color
+    backgroundColor: '#075E54',
     color: 'white',
     padding: '10px 20px',
     fontSize: '18px',
@@ -291,7 +368,7 @@ const ChatTest: React.FC = () => {
     flex: 1,
     padding: '10px',
     overflowY: 'auto',
-    backgroundColor: '#ECE5DD', // WhatsApp-like background
+    backgroundColor: '#ECE5DD',
   };
 
   const inputContainerStyle: React.CSSProperties = {
@@ -373,7 +450,6 @@ const ChatTest: React.FC = () => {
               marginBottom: '8px',
             }}
           >
-            {/* Display the "server" label above received messages */}
             {msg.type === 'received' && (
               <span style={{ fontSize: '10px', color: '#555', marginBottom: '2px' }}>server</span>
             )}
