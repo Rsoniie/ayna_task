@@ -60,6 +60,10 @@ const Login: React.FC = () => {
     alert('This feature is not available yet');
   };
 
+  const handlesignup = () => {
+    navigate('/signup');
+  }
+
   return (
     <section className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
       {/* Loading Overlay */}
@@ -177,7 +181,7 @@ const Login: React.FC = () => {
           </button>
           <p className="text-center text-sm text-gray-600">
             Don’t have an account?{' '}
-            <a href="/signup" className="font-medium hover:underline">
+            <a onClick={handlesignup} className="font-medium hover:underline">
               Sign up
             </a>
           </p>
