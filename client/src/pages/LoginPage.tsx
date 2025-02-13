@@ -1,9 +1,7 @@
-
-
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { db } from '../db/db';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { db } from "../db/db";
 
 interface LoginResponse {
   token: string;
@@ -15,61 +13,58 @@ interface LoginResponse {
 }
 
 const Login: React.FC = () => {
-  const [email, setIdentifier] = useState<string>('');
-  const [password, setPassword] = useState<string>('');
-  const [error, setError] = useState<string>('');
+  const [email, setIdentifier] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [error, setError] = useState<string>("");
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(false); // NEW Loading state
+  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
-    setError('');
-    setIsLoading(true); // Show loading screen when the request starts
+    setError("");
+    setIsLoading(true);
 
     try {
       const url = import.meta.env.VITE_API_URL;
-      const { data } = await axios.post<LoginResponse>(
-        `${url}/auth/login`,
-        { email, password }
-      );
-
-      // Clear any existing AuthData in IndexedDB
+      const { data } = await axios.post<LoginResponse>(`${url}/auth/login`, {
+        email,
+        password,
+      });
       await db.authData.clear();
-      // Store token & user in IndexedDB
       await db.authData.add({
         token: data.token,
         user: data.user,
       });
-
-      // Login success, navigate to chat page
-      navigate('/chat');
+      navigate("/chat");
     } catch (err: any) {
       if (axios.isAxiosError(err)) {
-        setError(err.response?.data?.message || 'Login failed. Please try again.');
+        setError(
+          err.response?.data?.message || "Login failed. Please try again."
+        );
       } else {
-        setError('An unexpected error occurred.');
+        setError("An unexpected error occurred.");
       }
     } finally {
-      setIsLoading(false); // Hide loading screen after response
+      setIsLoading(false);
     }
   };
 
   const handleforget = () => {
-    alert('This feature is not available yet');
+    alert("This feature is not available yet");
   };
 
   const handlesignup = () => {
-    navigate('/signup');
-  }
+    navigate("/signup");
+  };
 
   return (
     <section className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      {/* Loading Overlay */}
       {isLoading && (
         <div className="fixed inset-0 bg-gray-900 bg-opacity-50 flex items-center justify-center z-50">
-          {/* Simple Tailwind spinner */}
           <div className="border-t-transparent border-solid animate-spin rounded-full border-gray-300 border-8 h-16 w-16"></div>
         </div>
       )}
@@ -83,7 +78,9 @@ const Login: React.FC = () => {
           />
           <h1 className="text-2xl font-semibold text-gray-800">Sign in</h1>
         </div>
-        {error && <p className="mb-4 text-center text-red-500 text-sm">{error}</p>}
+        {error && (
+          <p className="mb-4 text-center text-red-500 text-sm">{error}</p>
+        )}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label htmlFor="email" className="block text-gray-600 mb-1">
@@ -105,7 +102,7 @@ const Login: React.FC = () => {
               Password
             </label>
             <input
-              type={showPassword ? 'text' : 'password'}
+              type={showPassword ? "text" : "password"}
               name="password"
               id="password"
               placeholder="Enter your password"
@@ -165,11 +162,17 @@ const Login: React.FC = () => {
                 type="checkbox"
                 className="h-4 w-4 text-gray-600 focus:ring-gray-300 border-gray-300 rounded"
               />
-              <label htmlFor="remember" className="ml-2 block text-sm text-gray-600">
+              <label
+                htmlFor="remember"
+                className="ml-2 block text-sm text-gray-600"
+              >
                 Remember me
               </label>
             </div>
-            <a onClick={handleforget} className="text-sm text-gray-600 hover:underline cursor-pointer">
+            <a
+              onClick={handleforget}
+              className="text-sm text-gray-600 hover:underline cursor-pointer"
+            >
               Forgot password?
             </a>
           </div>
@@ -180,7 +183,7 @@ const Login: React.FC = () => {
             Sign in
           </button>
           <p className="text-center text-sm text-gray-600">
-            Don’t have an account?{' '}
+            Don’t have an account?{" "}
             <a onClick={handlesignup} className="font-medium hover:underline">
               Sign up
             </a>

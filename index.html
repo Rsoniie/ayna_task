@@ -49,54 +49,52 @@
 </html>
  -->
 
-
-
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>WebSocket Chat Test</title>
-  <!-- Load Socket.IO client (version 4.x to match the server) -->
-  <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Connect to the WebSocket server running on localhost port 3001.
-      const socket = io('https://ayna-task.onrender.com');
-
-      // When connected, log and display a message.
-      socket.on('connect', () => {
-        console.log('Connected to WebSocket server!');
-        displayMessage('Connected to WebSocket server!');
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>WebSocket Chat Test</title>
+    <script src="https://cdn.socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const socket = io("api/chat");
+        socket.on("connect", () => {
+          console.log("Connected to WebSocket server!");
+          displayMessage("Connected to WebSocket server!");
+        });
+        socket.on("server_message", function (message) {
+          console.log("Message from server:", message);
+          displayMessage("Server: " + message);
+        });
+        document
+          .getElementById("sendBtn")
+          .addEventListener("click", function () {
+            const message = document.getElementById("messageInput").value;
+            socket.emit("client_message", message);
+            displayMessage("You: " + message);
+          });
+        function displayMessage(message) {
+          const p = document.createElement("p");
+          p.innerText = message;
+          document.getElementById("messages").appendChild(p);
+        }
       });
-
-      // Listen for messages from the server.
-      socket.on('server_message', function(message) {
-        console.log('Message from server:', message);
-        displayMessage('Server: ' + message);
-      });
-
-      // When the "Send Message" button is clicked, send the message.
-      document.getElementById('sendBtn').addEventListener('click', function() {
-        const message = document.getElementById('messageInput').value;
-        // Emit the message to the server.
-        socket.emit('client_message', message);
-        displayMessage('You: ' + message);
-      });
-
-      // Helper function to display messages on the page.
-      function displayMessage(message) {
-        const p = document.createElement('p');
-        p.innerText = message;
-        document.getElementById('messages').appendChild(p);
-      }
-    });
-  </script>
-</head>
-<body>
-  <h1>WebSocket Chat Test</h1>
-  <div id="messages" style="border:1px solid #ccc; padding:10px; margin-bottom:10px; height:200px; overflow:auto;"></div>
-  <input type="text" id="messageInput" placeholder="Type a message..." />
-  <button id="sendBtn">Send Message</button>
-</body>
+    </script>
+  </head>
+  <body>
+    <h1>WebSocket Chat Test</h1>
+    <div
+      id="messages"
+      style="
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        height: 200px;
+        overflow: auto;
+      "
+    ></div>
+    <input type="text" id="messageInput" placeholder="Type a message..." />
+    <button id="sendBtn">Send Message</button>
+  </body>
 </html>
