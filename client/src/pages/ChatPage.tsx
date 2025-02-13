@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { useNavigate } from 'react-router-dom';
-import { db, ChatMessage, ChatSession, AuthData } from '../db/db';
+import { db, ChatSession, AuthData } from '../db/db';
 
 interface ChatMessageExtended {
   id: number;
