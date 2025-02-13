@@ -219,9 +219,9 @@ const Signup: React.FC = () => {
 
     try {
       // Replace with your actual endpoint. The payload now includes username.
-      const url = import.meta.env.VITE_SERVER_API;
+      const url = import.meta.env.VITE_API_URL;
       const { data } = await axios.post<SignupResponse>(
-        `${url}/api/auth/local/register`,
+        `${url}/auth/signup`,
         { username, email, password }
       );
 
